@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
-use rumqttc::{AsyncClient, MqttOptions, QoS};
+use rumqttc::{mqttbytes::v4::Packet::Publish, AsyncClient, Event::Incoming, MqttOptions, QoS};
 use tokio::{
     sync::{mpsc, oneshot, watch, RwLock},
     task, time,
@@ -55,9 +55,9 @@ impl SubscriberActor {
                 match p {
                     Ok(p) => {
                         println!("Actor mqtt received = {:?}", p);
-                        if let rumqttc::Event::Incoming(i) = p {
+                        if let Incoming(i) = p {
                             match i {
-                                rumqttc::mqttbytes::v4::Packet::Publish(p) => {
+                                Publish(p) => {
                                     let topic = p.topic;
                                     let map = loopmap.read().await;
                                     if let Some(w) = map.get(&topic) {
