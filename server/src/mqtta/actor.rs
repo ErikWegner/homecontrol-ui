@@ -9,10 +9,12 @@ use tracing::{debug, error};
 
 use super::message::ActorMessage;
 
+type WatcherMap =
+    Arc<RwLock<HashMap<String, (watch::Sender<Arc<String>>, watch::Receiver<Arc<String>>)>>>;
+
 pub(super) struct SubscriberActor {
     pub(crate) receiver: mpsc::Receiver<ActorMessage>,
-    watchers:
-        Arc<RwLock<HashMap<String, (watch::Sender<Arc<String>>, watch::Receiver<Arc<String>>)>>>,
+    watchers: WatcherMap,
     client: AsyncClient,
 }
 
@@ -21,9 +23,7 @@ impl SubscriberActor {
         let mut mqttoptions = MqttOptions::new("rumqtt-actor", "test.mosquitto.org", 1883);
         mqttoptions.set_keep_alive(Duration::from_secs(5));
 
-        let watchers: Arc<
-            RwLock<HashMap<String, (watch::Sender<Arc<String>>, watch::Receiver<Arc<String>>)>>,
-        > = Default::default();
+        let watchers: WatcherMap = Default::default();
         let loopmap = watchers.clone();
 
         let (client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
@@ -95,9 +95,6 @@ impl SubscriberActor {
                     Err(e) => error!("Error subscribing to: {} - {:?}", topic, e),
                 }
                 let _ = respond_to.send(rx);
-            }
-            ActorMessage::Shutdown => {
-                let _ = self.client.disconnect().await;
             }
         }
     }

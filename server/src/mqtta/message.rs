@@ -7,5 +7,4 @@ pub(crate) enum ActorMessage {
         topic: String,
         respond_to: oneshot::Sender<watch::Receiver<Arc<String>>>,
     },
-    Shutdown,
 }
