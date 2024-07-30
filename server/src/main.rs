@@ -1,9 +1,6 @@
-use crate::mqtta::mqtta;
 use dotenvy::dotenv;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-mod mqtta;
 
 #[tokio::main]
 async fn main() {
@@ -16,6 +13,6 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
     info!("start");
-    mqtta().await;
+    homecontrol_ui_server::run().await;
     info!("end");
 }
