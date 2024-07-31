@@ -77,6 +77,9 @@ impl SubscriberActor {
 
     pub(super) async fn handle(&mut self, msg: ActorMessage) {
         match msg {
+            ActorMessage::Status { respond_to } => {
+                let _ = respond_to.send(String::from("implementation pending"));
+            }
             ActorMessage::Subscribe { topic, respond_to } => {
                 let mut w = self.watchers.write().await;
                 let vo = w.get(&topic);

@@ -3,7 +3,7 @@ use tokio::sync::mpsc;
 use super::message::ActorMessage;
 
 #[derive(Clone)]
-pub(crate) struct MqttHandle {
+pub struct MqttHandle {
     sender: mpsc::Sender<ActorMessage>,
 }
 

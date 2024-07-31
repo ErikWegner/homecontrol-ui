@@ -1,20 +1,46 @@
 mod actor;
 mod handle;
-mod message;
+pub(crate) mod message;
 
 use std::{sync::Arc, time::Duration};
 
 use actor::SubscriberActor;
-use handle::MqttHandle;
+pub(crate) use handle::MqttHandle;
 use message::ActorMessage;
 use rumqttc::{AsyncClient, MqttOptions, QoS};
 use tokio::{
     sync::{mpsc, oneshot, watch},
-    task, time,
+    task::{self, JoinHandle},
+    time,
 };
 use tracing::debug;
 
-async fn run_subscriber_actor() -> (MqttHandle, oneshot::Sender<()>) {
+pub(crate) async fn run_subscriber_actor(
+    channelsize: usize,
+) -> (MqttHandle, oneshot::Sender<()>, JoinHandle<()>) {
+    debug!("Setup mqtt with {channelsize} buffer size");
+    let (sender, receiver) = mpsc::channel(channelsize);
+    let mut actor = SubscriberActor::new(receiver);
+    let (tx, mut rx) = oneshot::channel::<()>();
+    let jh = tokio::spawn(async move {
+        loop {
+            debug!("Loop actor receiver");
+            tokio::select! {
+                _ = &mut rx => {
+                    break;
+                }
+                Some(msg) = actor.receiver.recv() => {
+                    debug!("Actor message received");
+                    actor.handle(msg).await;
+                }
+            }
+        }
+    });
+    let handle = MqttHandle::new(sender);
+    (handle, tx, jh)
+}
+
+async fn run_subscriber_actor_poc() -> (MqttHandle, oneshot::Sender<()>) {
     debug!("run_subscriber_actor");
     let (sender, receiver) = mpsc::channel(8);
     let mut actor = SubscriberActor::new(receiver);
@@ -39,7 +65,7 @@ async fn run_subscriber_actor() -> (MqttHandle, oneshot::Sender<()>) {
 
 pub(crate) async fn mqtta() {
     debug!("Creating actor");
-    let (actor, stopmqttsignal) = run_subscriber_actor().await;
+    let (actor, stopmqttsignal) = run_subscriber_actor_poc().await;
 
     debug!("Subscribing");
     let (wtx, wrx) = oneshot::channel::<watch::Receiver<Arc<String>>>();

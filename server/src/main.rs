@@ -1,9 +1,11 @@
+use color_eyre::eyre::Result;
 use dotenvy::dotenv;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
+    let _ = color_eyre::install()?;
     let _ = dotenv();
     tracing_subscriber::registry()
         .with(
@@ -13,6 +15,7 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
     info!("start");
-    homecontrol_ui_server::run().await;
+    homecontrol_ui_server::run().await?;
     info!("end");
+    Ok(())
 }
