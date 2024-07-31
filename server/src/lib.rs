@@ -10,7 +10,7 @@ pub async fn run() -> Result<()> {
     let channelsize = std::env::var("HCS_PERF_CHANNELBUFSIZE")
         .unwrap_or_else(|_| "8".to_string())
         .parse::<usize>()
-        .context("Cannot parse PORTHCS_PERF_CHANNELBUFSIZE")?;
+        .context("Cannot parse HCS_PERF_CHANNELBUFSIZE")?;
     let (handle, tx, jh) = run_subscriber_actor(channelsize).await;
     let appstate = AppState::builder().mqtt(handle).build();
     http::http_server(appstate).await?;
