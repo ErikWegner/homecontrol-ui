@@ -1,3 +1,4 @@
+mod api;
 pub(crate) mod appstate;
 
 use std::{
@@ -6,18 +7,17 @@ use std::{
     time::Duration,
 };
 
+use api::status::status_handler;
 use appstate::AppState;
-use axum::{extract::State, routing::get, Router};
+use axum::{routing::get, Router};
 use color_eyre::{eyre::Context, Result};
-use tokio::{signal, sync::oneshot};
+use tokio::signal;
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 use tracing::debug;
 
-use crate::mqtta::{message::ActorMessage, MqttHandle};
-
 fn api_routes(state: AppState) -> Result<Router> {
     Ok(Router::new()
-        .route("/status", get(status))
+        .route("/status", get(status_handler))
         .with_state(state))
 }
 
@@ -71,17 +71,5 @@ async fn shutdown_signal() {
     tokio::select! {
         _ = ctrl_c => {},
         _ = terminate => {},
-    }
-}
-
-async fn status(State(mqtt): State<MqttHandle>) -> String {
-    let (tx, rx) = oneshot::channel::<String>();
-    tokio::spawn(async move {
-        mqtt.send(ActorMessage::Status { respond_to: tx }).await;
-    });
-
-    match rx.await {
-        Ok(v) => v,
-        Err(_) => "No response".to_string(),
     }
 }

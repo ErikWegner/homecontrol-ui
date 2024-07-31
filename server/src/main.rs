@@ -5,7 +5,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let _ = color_eyre::install()?;
+    color_eyre::install()?;
     let _ = dotenv();
     tracing_subscriber::registry()
         .with(
