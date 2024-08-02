@@ -1,0 +1,5 @@
+:host {
+  max-width: calc(3 * var(--widget-size) + 2 * var(--bulma-column-gap));
+  display: block;
+  margin: 0 auto;
+}
