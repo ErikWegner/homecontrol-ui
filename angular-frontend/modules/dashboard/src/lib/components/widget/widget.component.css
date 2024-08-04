@@ -2,18 +2,22 @@
   height: var(--widget-size);
 }
 
+.cell {
+  padding-bottom: 2px;
+}
+
 .hctitle {
   margin-top: 1px;
   text-align: center;
   font-size: 12px;
-  height: 26px;
-  line-height: 13px;
+  height: 25px;
+  line-height: 12px;
   overflow: hidden;
 }
 
 .hcicon {
   display: block;
-  margin: 0 auto 1px;
+  margin: 0 auto;
   max-width: var(--widget-size);
   max-height: calc(var(--widget-size) - 28px);
 }

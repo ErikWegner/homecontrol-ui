@@ -2,4 +2,8 @@
 @import 'node_modules/bulma/css/bulma.min.css';
 :root {
   --widget-size: 120px;
+  /* Bulma theme */
+  --bulma-primary-h: 36deg;
+  --bulma-primary-s: 76%;
+  --bulma-primary-l: 75%;
 }
