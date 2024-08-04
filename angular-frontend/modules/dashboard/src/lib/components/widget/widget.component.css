@@ -1,4 +1,28 @@
 :host {
-  background-color: red;
   height: var(--widget-size);
+}
+
+.hctitle {
+  margin-top: 1px;
+  text-align: center;
+  font-size: 12px;
+  height: 26px;
+  line-height: 13px;
+  overflow: hidden;
+}
+
+.hcicon {
+  display: block;
+  margin: 0 auto 1px;
+  max-width: var(--widget-size);
+  max-height: calc(var(--widget-size) - 28px);
+}
+
+.hcvalue {
+  height: 96px;
+  width: var(--widget-size);
+  line-height: 96px;
+  vertical-align: middle;
+  text-align: center;
+  white-space: nowrap;
 }

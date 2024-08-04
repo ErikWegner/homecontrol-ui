@@ -1,3 +1,12 @@
-<div class="cell">
-  {{ title() }}
+<div class="cell has-background-primary-soft has-text-primary-soft-invert">
+  <div class="hctitle">
+    {{ title() }}
+  </div>
+  @if(type() == "button") {
+  <img class="hcicon" [src]="icon()" />
+  } @if(type() == "text") {
+  <div class="hcvalue" #textscale>
+    {{ value() }}
+  </div>
+  }
 </div>
