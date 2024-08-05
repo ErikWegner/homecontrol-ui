@@ -357,6 +357,8 @@ dependencies = [
  "hyper",
  "hyper-util",
  "rumqttc",
+ "serde",
+ "serde_json",
  "tokio",
  "tower",
  "tower-http",
