@@ -2,7 +2,7 @@ use std::path::Path;
 
 use color_eyre::eyre::Result;
 use dotenvy::dotenv;
-use tracing::{debug, info};
+use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]

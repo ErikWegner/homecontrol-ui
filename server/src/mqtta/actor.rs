@@ -16,6 +16,8 @@ pub(super) struct SubscriberActor {
     pub(crate) receiver: mpsc::Receiver<ActorMessage>,
     watchers: WatcherMap,
     client: AsyncClient,
+    run: Arc<RwLock<bool>>,
+    polltask: task::JoinHandle<()>,
 }
 
 impl SubscriberActor {
@@ -25,9 +27,11 @@ impl SubscriberActor {
 
         let watchers: WatcherMap = Default::default();
         let loopmap = watchers.clone();
+        let runindicator = Arc::new(RwLock::new(true));
+        let runloopindicator = runindicator.clone();
 
         let (client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
-        task::spawn(async move {
+        let polltask = task::spawn(async move {
             debug!("Actor mqtt started");
             loop {
                 let p = eventloop.poll().await;
@@ -62,8 +66,12 @@ impl SubscriberActor {
                     }
                     Err(e) => {
                         error!("Error polling: {:?}", e);
-                        break;
                     }
+                }
+                let keeprunning = runloopindicator.read().await;
+                if !(*keeprunning) {
+                    debug!("Actor mqtt can stop now");
+                    break;
                 }
             }
             debug!("Actor mqtt stopped");
@@ -72,6 +80,8 @@ impl SubscriberActor {
             receiver,
             watchers,
             client,
+            run: runindicator,
+            polltask,
         }
     }
 
@@ -120,6 +130,20 @@ impl SubscriberActor {
                 }
                 let _ = respond_to.send(rx);
             }
+        }
+    }
+
+    pub(crate) async fn stop(self) {
+        debug!("Setting stop signal");
+        {
+            let mut r = self.run.write().await;
+            *r = false;
+        }
+
+        debug!("Waiting for event loop task to finish");
+        let polltaskresult = self.polltask.await;
+        if let Err(polltaskerr) = polltaskresult {
+            error!("Failed to stop polling task, {:?}", polltaskerr);
         }
     }
 }
