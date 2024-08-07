@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, effect, ElementRef, input, ViewChild } from '@angular/core';
 import { WidgetType } from '../../widget-type';
+import { Web2MqttPayload } from '../../web2mqtt-payload';
+import { HcBackendService } from '../../services/hc-backend.service';
 
 @Component({
   selector: 'lib-widget',
@@ -14,9 +16,11 @@ export class WidgetComponent {
   title = input('');
   icon = input('icons/fullcircle.svg');
   value = input('');
+  cmd = input<Web2MqttPayload | null>(null);
 
   @ViewChild('textscale') textscale: ElementRef | null = null;
-  constructor() {
+
+  constructor(private hc: HcBackendService) {
     effect(() => {
       const desiredWidth = 120;
       const scaleFontContainer = this.textscale?.nativeElement;
@@ -33,5 +37,13 @@ export class WidgetComponent {
         }
       }
     });
+  }
+
+  onClick() {
+    const payload = this.cmd();
+    if (!payload) {
+      return;
+    }
+    this.hc.publish({ payload }).subscribe();
   }
 }

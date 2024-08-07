@@ -5,7 +5,7 @@ use tokio::{
     sync::{mpsc, watch, RwLock},
     task,
 };
-use tracing::{debug, error};
+use tracing::{debug, error, warn};
 
 use super::message::ActorMessage;
 
@@ -77,6 +77,27 @@ impl SubscriberActor {
 
     pub(super) async fn handle(&mut self, msg: ActorMessage) {
         match msg {
+            ActorMessage::Publish {
+                payload,
+                respond_to,
+            } => {
+                let pubresult = self
+                    .client
+                    .publish(
+                        &payload.topic,
+                        payload.qos,
+                        payload.retain,
+                        payload.value.clone(),
+                    )
+                    .await;
+                let _ = respond_to.send(match pubresult {
+                    Ok(_) => String::from("OK"),
+                    Err(err) => {
+                        warn!("Sending {:?} failed {:?}", payload, err);
+                        String::from("Error")
+                    }
+                });
+            }
             ActorMessage::Status { respond_to } => {
                 let _ = respond_to.send(String::from("implementation pending"));
             }

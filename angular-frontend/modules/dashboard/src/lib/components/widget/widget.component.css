@@ -2,6 +2,10 @@
   height: var(--widget-size);
 }
 
+.pointer {
+  cursor: pointer;
+}
+
 .cell {
   padding-bottom: 2px;
 }

@@ -1,7 +1,16 @@
 <lib-container title="window blinds">
   <lib-panel title="left">
     <lib-widget type="button" title="up" />
-    <lib-widget type="button" title="stop" />
+    <lib-widget
+      type="button"
+      title="stop"
+      [cmd]="{
+        topic: '/room1/controller1/cmd',
+        value: 'dashboard says STOP',
+        qos: 1,
+        retain: false
+      }"
+    />
     <lib-widget type="button" title="down" />
     <lib-widget type="text" title="open" value="28" />
     <lib-widget

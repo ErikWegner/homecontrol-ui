@@ -1,4 +1,8 @@
-<div class="cell has-background-primary-soft has-text-primary-soft-invert">
+<div
+  class="cell has-background-primary-soft has-text-primary-soft-invert"
+  [class.pointer]="cmd()"
+  (click)="onClick()"
+>
   <div class="hctitle">
     {{ title() }}
   </div>

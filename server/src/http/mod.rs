@@ -7,9 +7,12 @@ use std::{
     time::Duration,
 };
 
-use api::status::status_handler;
+use api::{status::status_handler, web2mqtt::web2mqtt_handler};
 use appstate::AppState;
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use color_eyre::{eyre::Context, Result};
 use tokio::signal;
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
@@ -18,6 +21,7 @@ use tracing::debug;
 fn api_routes(state: AppState) -> Result<Router> {
     Ok(Router::new()
         .route("/status", get(status_handler))
+        .route("/publish", post(web2mqtt_handler))
         .with_state(state))
 }
 
