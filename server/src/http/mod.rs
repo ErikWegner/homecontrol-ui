@@ -7,11 +7,11 @@ use std::{
     time::Duration,
 };
 
-use api::{status::status_handler, web2mqtt::web2mqtt_handler};
+use api::{status::status_handler, web2mqtt::web2mqtt_handler, ws::ws_handler};
 use appstate::AppState;
 use axum::{
     routing::{get, post},
-    Router,
+    Router, ServiceExt,
 };
 use color_eyre::{eyre::Context, Result};
 use tokio::signal;
@@ -22,6 +22,7 @@ fn api_routes(state: AppState) -> Result<Router> {
     Ok(Router::new()
         .route("/status", get(status_handler))
         .route("/publish", post(web2mqtt_handler))
+        .route("/ws", get(ws_handler))
         .with_state(state))
 }
 
@@ -45,10 +46,13 @@ pub(crate) async fn http_server(state: AppState) -> Result<()> {
         .await
         .context("Cannot start server")?;
 
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .context("error running server")?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .context("error running server")?;
 
     debug!("Shutdown completed");
     Ok(())
