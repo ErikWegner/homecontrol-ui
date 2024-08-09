@@ -20,6 +20,8 @@ export class HcBackendService {
   }
 
   public publish(o: { payload: Web2MqttPayload }) {
-    return this.http.post<string>('/api/publish', o.payload);
+    return this.http.post('/api/publish', o.payload, {
+      responseType: 'text',
+    });
   }
 }

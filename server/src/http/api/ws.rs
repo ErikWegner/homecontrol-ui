@@ -1,23 +1,29 @@
-use std::{borrow::Cow, net::SocketAddr, ops::ControlFlow};
+use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
-    extract::ws::{Message, WebSocket, WebSocketUpgrade},
+    extract::{
+        ws::{Message, WebSocket, WebSocketUpgrade},
+        State,
+    },
     response::IntoResponse,
 };
 use axum_extra::TypedHeader;
 
 //allows to extract the IP of connecting user
 use axum::extract::connect_info::ConnectInfo;
-use axum::extract::ws::CloseFrame;
 
 //allows to split the websocket stream into separate TX and RX branches
 use futures::{sink::SinkExt, stream::StreamExt};
+use tokio::sync::{oneshot, watch};
 use tracing::debug;
+
+use crate::mqtta::{message::ActorMessage, MqttHandle};
 
 pub(crate) async fn ws_handler(
     ws: WebSocketUpgrade,
     user_agent: Option<TypedHeader<headers::UserAgent>>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    State(mqtt): State<MqttHandle>,
 ) -> impl IntoResponse {
     let user_agent = if let Some(TypedHeader(user_agent)) = user_agent {
         user_agent.to_string()
@@ -27,11 +33,11 @@ pub(crate) async fn ws_handler(
     debug!("`{user_agent}` at {addr} connected.");
     // finalize the upgrade process by returning upgrade callback.
     // we can customize the callback by sending additional info such as address.
-    ws.on_upgrade(move |socket| handle_socket(socket, addr))
+    ws.on_upgrade(move |socket| handle_socket(socket, addr, mqtt))
 }
 
 /// Actual websocket statemachine (one will be spawned per connection)
-async fn handle_socket(mut socket: WebSocket, who: SocketAddr) {
+async fn handle_socket(mut socket: WebSocket, who: SocketAddr, mqtt: MqttHandle) {
     // send a ping (unsupported by some browsers) just to kick things off and get a response
     if socket.send(Message::Ping(vec![1, 2, 3])).await.is_ok() {
         debug!("Pinged {who}...");
@@ -46,102 +52,51 @@ async fn handle_socket(mut socket: WebSocket, who: SocketAddr) {
     // unsolicited messages to client based on some sort of server's internal event (i.e .timer).
     let (mut sender, mut receiver) = socket.split();
 
-    // Spawn a task that will push several messages to the client (does not matter what client does)
-    let mut send_task = tokio::spawn(async move {
-        let n_msg = 20;
-        for i in 0..n_msg {
-            // In case of any websocket error, we exit.
-            if sender
-                .send(Message::Text(format!(
-                    "{{\"message\":\"Server message {i} ...\"}}"
-                )))
-                .await
-                .is_err()
-            {
-                return i;
+    let topic = "/room1/controller1/cmd";
+    let (tx_subscribe, rx_subscribe) = oneshot::channel::<watch::Receiver<Arc<String>>>();
+    let (tx_quit, mut rx_quit) = oneshot::channel::<()>();
+
+    let subscribe_task = tokio::spawn(async move {
+        debug!("Watcher task started");
+        match rx_subscribe.await {
+            Ok(mut w) => {
+                debug!("Received watch channel");
+                loop {
+                    tokio::select! {
+                        _ = &mut rx_quit => {
+                            debug!("Subscribe watcher task received stop signal");
+                            break;
+                        }
+                        _ = w.changed() => {
+                            debug!("Received watch channel change");
+                            let v = (*w.borrow_and_update()).clone();
+                            let m = Message::Text(v.to_string());
+                            let _ = sender.send(m).await;
+                        }
+                    }
+                }
             }
-
-            tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+            Err(_) => {
+                debug!("Could not subscribe to topic");
+            }
         }
-
-        debug!("Sending close to {who}...");
-        if let Err(e) = sender
-            .send(Message::Close(Some(CloseFrame {
-                code: axum::extract::ws::close_code::NORMAL,
-                reason: Cow::from("Goodbye"),
-            })))
-            .await
-        {
-            debug!("Could not send Close due to {e}, probably it is ok?");
-        }
-        n_msg
+        debug!("Subscribe watcher task stopped");
     });
 
-    // This second task will receive messages from client and print them on server console
-    let mut recv_task = tokio::spawn(async move {
-        let mut cnt = 0;
-        while let Some(Ok(msg)) = receiver.next().await {
-            cnt += 1;
-            // print message and break if instructed to do so
-            if process_message(msg, who).is_break() {
-                break;
-            }
-        }
-        cnt
-    });
+    while let Some(msg) = receiver.next().await {
+        debug!("Received message: {:?}", msg);
+    }
 
-    // If any one of the tasks exit, abort the other.
-    tokio::select! {
-        rv_a = (&mut send_task) => {
-            match rv_a {
-                Ok(a) => debug!("{a} messages sent to {who}"),
-                Err(a) => debug!("Error sending messages {a:?}")
-            }
-            recv_task.abort();
-        },
-        rv_b = (&mut recv_task) => {
-            match rv_b {
-                Ok(b) => debug!("Received {b} messages"),
-                Err(b) => debug!("Error receiving messages {b:?}")
-            }
-            send_task.abort();
-        }
+    let message = ActorMessage::Subscribe {
+        topic: String::from(topic),
+        respond_to: tx_subscribe,
+    };
+    mqtt.send(message).await;
+
+    if tx_quit.send(()).is_ok() {
+        subscribe_task.await.unwrap();
     }
 
     // returning from the handler closes the websocket connection
     debug!("Websocket context {who} destroyed");
-}
-
-/// helper to print contents of messages to stdout. Has special treatment for Close.
-fn process_message(msg: Message, who: SocketAddr) -> ControlFlow<(), ()> {
-    match msg {
-        Message::Text(t) => {
-            debug!(">>> {who} sent str: {t:?}");
-        }
-        Message::Binary(d) => {
-            debug!(">>> {} sent {} bytes: {:?}", who, d.len(), d);
-        }
-        Message::Close(c) => {
-            if let Some(cf) = c {
-                debug!(
-                    ">>> {} sent close with code {} and reason `{}`",
-                    who, cf.code, cf.reason
-                );
-            } else {
-                debug!(">>> {who} somehow sent close message without CloseFrame");
-            }
-            return ControlFlow::Break(());
-        }
-
-        Message::Pong(v) => {
-            debug!(">>> {who} sent pong with {v:?}");
-        }
-        // You should never need to manually handle Message::Ping, as axum's websocket library
-        // will do so for you automagically by replying with Pong and copying the v according to
-        // spec. But if you need the contents of the pings you can see them here.
-        Message::Ping(v) => {
-            debug!(">>> {who} sent ping with {v:?}");
-        }
-    }
-    ControlFlow::Continue(())
 }

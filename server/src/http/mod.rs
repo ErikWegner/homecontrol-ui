@@ -11,7 +11,7 @@ use api::{status::status_handler, web2mqtt::web2mqtt_handler, ws::ws_handler};
 use appstate::AppState;
 use axum::{
     routing::{get, post},
-    Router, ServiceExt,
+    Router,
 };
 use color_eyre::{eyre::Context, Result};
 use tokio::signal;
