@@ -83,16 +83,18 @@ async fn handle_socket(mut socket: WebSocket, who: SocketAddr, mqtt: MqttHandle)
         debug!("Subscribe watcher task stopped");
     });
 
-    while let Some(msg) = receiver.next().await {
-        debug!("Received message: {:?}", msg);
-    }
-
     let message = ActorMessage::Subscribe {
         topic: String::from(topic),
         respond_to: tx_subscribe,
     };
+    debug!("Sending subscribe message to MqttHandle");
     mqtt.send(message).await;
 
+    while let Some(msg) = receiver.next().await {
+        debug!("Received message: {:?}", msg);
+    }
+
+    debug!("Sending stop signal to watcher task");
     if tx_quit.send(()).is_ok() {
         subscribe_task.await.unwrap();
     }
