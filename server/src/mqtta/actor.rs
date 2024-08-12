@@ -1,5 +1,6 @@
-use std::{collections::HashMap, sync::Arc, time::Duration};
+use std::{collections::HashMap, env, sync::Arc, time::Duration};
 
+use rand::distributions::{Alphanumeric, DistString};
 use rumqttc::{mqttbytes::v4::Packet::Publish, AsyncClient, Event::Incoming, MqttOptions, QoS};
 use tokio::{
     sync::{mpsc, watch, RwLock},
@@ -20,9 +21,28 @@ pub(super) struct SubscriberActor {
     polltask: task::JoinHandle<()>,
 }
 
+fn mqtt_client_id() -> String {
+    if let Ok(c) = env::var("HCS_MQTT_CLIENT_ID") {
+        return c;
+    }
+
+    let mut hostname = String::from("client");
+    if let Ok(h) = hostname::get() {
+        if let Ok(s) = h.into_string() {
+            hostname = s;
+        }
+    }
+
+    let randompart = Alphanumeric.sample_string(&mut rand::thread_rng(), 8);
+
+    format!("hcs-{hostname}-{randompart}")
+}
+
 impl SubscriberActor {
     pub(super) fn new(receiver: mpsc::Receiver<ActorMessage>) -> Self {
-        let mut mqttoptions = MqttOptions::new("rumqtt-actor", "test.mosquitto.org", 1883);
+        debug!("Creating subscriber actor");
+        let mqtt_id = mqtt_client_id();
+        let mut mqttoptions = MqttOptions::new(mqtt_id, "test.mosquitto.org", 1883);
         mqttoptions.set_keep_alive(Duration::from_secs(5));
 
         let watchers: WatcherMap = Default::default();

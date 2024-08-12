@@ -12,6 +12,8 @@ Environment variables override settings from an env file.
 
 ### Environment variables
 
+`HCS_MQTT_CLIENT_ID` mqtt client id. Must be unique across all clients connected to the same server.
+
 `HCS_PERF_CHANNELBUFSIZE` controls the number of messages that are held in an internal queue. Increase if more
 concurrent web clients are connected.
 
