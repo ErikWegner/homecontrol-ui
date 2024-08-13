@@ -1,7 +1,5 @@
 # Server
 
-^
-
 ## Configuration
 
 Configuration can be provided through the following mechanism:
