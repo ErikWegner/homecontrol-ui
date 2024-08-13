@@ -2,7 +2,9 @@ use std::{collections::HashMap, env, sync::Arc, time::Duration};
 
 use color_eyre::eyre::{eyre, Context, Result};
 use rand::distributions::{Alphanumeric, DistString};
-use rumqttc::{mqttbytes::v4::Packet::Publish, AsyncClient, Event::Incoming, MqttOptions, QoS};
+use rumqttc::{
+    mqttbytes::v4::Packet::Publish, AsyncClient, Event::Incoming, MqttOptions, QoS, Transport,
+};
 use tokio::{
     sync::{mpsc, watch, RwLock},
     task,
@@ -75,6 +77,30 @@ fn mqtt_credentials(mo: &mut MqttOptions) {
     }
 }
 
+fn mqtt_transport(mo: &mut MqttOptions) -> Result<()> {
+    if let Ok(transport) = env::var("HCS_MQTT_TRANSPORT") {
+        let transport = transport.to_lowercase();
+        if transport == "mqtts" || transport == "ssl" || transport == "tls" {
+            if let Ok(ca_path) = env::var("HCS_MQTT_CACERT_FILE") {
+                let cabytes = std::fs::read(ca_path)
+                    .map_err(|e| eyre!("Failed to read CA certificate: {e}"))?;
+                mo.set_transport(Transport::tls_with_config(
+                    rumqttc::TlsConfiguration::SimpleNative {
+                        ca: cabytes,
+                        client_auth: None,
+                    },
+                ));
+            } else {
+                mo.set_transport(Transport::tls_with_config(
+                    rumqttc::TlsConfiguration::Native,
+                ));
+            }
+        }
+    }
+
+    Ok(())
+}
+
 fn mqtt_keepalive() -> Result<u64> {
     if let Ok(ka) = env::var("HCS_MQTT_KEEPALIVE") {
         return ka.parse::<u64>().wrap_err_with(|| "Invalid MQTT keepalive");
@@ -88,6 +114,7 @@ pub(crate) fn mqtt_options_from_env() -> color_eyre::Result<MqttOptions> {
     let mqtt_host = mqtt_host()?;
     let mqtt_port = mqtt_port()?;
     let mut mqttoptions = MqttOptions::new(mqtt_id, mqtt_host, mqtt_port);
+    mqtt_transport(&mut mqttoptions)?;
     mqttoptions.set_keep_alive(Duration::from_secs(mqtt_keepalive()?));
     mqtt_credentials(&mut mqttoptions);
     Ok(mqttoptions)
@@ -104,7 +131,15 @@ impl SubscriberActor {
         let (hostname, port) = mqttoptions.broker_address();
         let clientid = mqttoptions.client_id();
         let with_credentials = mqttoptions.credentials().is_some();
-        info!(hostname, port, clientid, with_credentials, "Using mqtt");
+        let with_tls = match mqttoptions.transport() {
+            Transport::Tls(_) => "true",
+            _ => "false",
+        };
+
+        info!(
+            hostname,
+            port, clientid, with_credentials, with_tls, "Using mqtt"
+        );
         let (client, mut eventloop) = AsyncClient::new(mqttoptions, 10);
         let polltask = task::spawn(async move {
             debug!("Actor mqtt started");

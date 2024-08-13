@@ -20,6 +20,10 @@ Environment variables override settings from an env file.
 
 `HCS_MQTT_USERNAME` and `HCS_MQTT_PASSWORD` credentials to be used to connect to the mqtt broker.
 
+`HCS_MQTT_TRANSPORT` can be set to `tls` to use encryption.
+
+`HCS_MQTT_CACERT_FILE` can be used to provide the ca certificate used to sign the server certificate.
+
 `HCS_MQTT_KEEPALIVE` number of seconds for keep alive packets between mqtt broker and client.
 
 `HCS_PERF_CHANNELBUFSIZE` controls the number of messages that are held in an internal queue. Increase if more
