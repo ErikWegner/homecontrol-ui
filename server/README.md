@@ -12,7 +12,15 @@ Environment variables override settings from an env file.
 
 ### Environment variables
 
-`HCS_MQTT_CLIENT_ID` mqtt client id. Must be unique across all clients connected to the same server.
+`HCS_MQTT_CLIENT_ID`: mqtt client id. Must be unique across all clients connected to the same server.
+
+`HCS_MQTT_HOST`: mqtt broker hostname.
+
+`HCS_MQTT_PORT`: mqtt broker port number. Defaults to `1883`.
+
+`HCS_MQTT_USERNAME` and `HCS_MQTT_PASSWORD` credentials to be used to connect to the mqtt broker.
+
+`HCS_MQTT_KEEPALIVE` number of seconds for keep alive packets between mqtt broker and client.
 
 `HCS_PERF_CHANNELBUFSIZE` controls the number of messages that are held in an internal queue. Increase if more
 concurrent web clients are connected.

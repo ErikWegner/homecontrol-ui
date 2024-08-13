@@ -2,8 +2,10 @@ mod actor;
 mod handle;
 pub(crate) mod message;
 
+pub(crate) use actor::mqtt_options_from_env;
 use actor::SubscriberActor;
 pub(crate) use handle::MqttHandle;
+use rumqttc::MqttOptions;
 use tokio::{
     sync::{mpsc, oneshot},
     task::JoinHandle,
@@ -12,10 +14,11 @@ use tracing::debug;
 
 pub(crate) async fn run_subscriber_actor(
     channelsize: usize,
+    mqttoptions: MqttOptions,
 ) -> (MqttHandle, oneshot::Sender<()>, JoinHandle<()>) {
     debug!("Setup mqtt with {channelsize} buffer size");
     let (sender, receiver) = mpsc::channel(channelsize);
-    let mut actor = SubscriberActor::new(receiver);
+    let mut actor = SubscriberActor::new(receiver, mqttoptions);
     let (tx, mut rx) = oneshot::channel::<()>();
     let jh = tokio::spawn(async move {
         loop {

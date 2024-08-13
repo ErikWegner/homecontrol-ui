@@ -11,7 +11,8 @@ pub async fn run() -> Result<()> {
         .unwrap_or_else(|_| "8".to_string())
         .parse::<usize>()
         .context("Cannot parse HCS_PERF_CHANNELBUFSIZE")?;
-    let (handle, tx, jh) = run_subscriber_actor(channelsize).await;
+    let mo = mqtta::mqtt_options_from_env()?;
+    let (handle, tx, jh) = run_subscriber_actor(channelsize, mo).await;
     let appstate = AppState::builder().mqtt(handle).build();
     http::http_server(appstate).await?;
     debug!("Shutdown");
