@@ -1,0 +1,23 @@
+name: hcs-auth
+
+services:
+  ridser:
+    image: erikwegner/ridser:2.0.0
+    ports:
+      - '3020:3020'
+    depends_on:
+      - redis
+    env_file: env
+    environment:
+      - RUST_LOG=info
+      - RIDSER_BIND_PORT=3020
+      - RIDSER_REDIS_URL=redis://redis:6379
+      # Target for authenticated requests
+      - RIDSER_PROXY_TARGET=http://172.17.0.1:3000/
+      # Deny refresh requests as long as the session is valid for longer than this threshold
+      - RIDSER_SESSION_REFRESH_THRESHOLD=15
+      - RIDSER_LOGIN_REDIRECT_APP_URIS=http://localhost:4200/
+      - RIDSER_LOGOUT_REDIRECT_APP_URIS=http://localhost:4200/
+
+  redis:
+    image: redis:7

@@ -11,4 +11,4 @@ import { WidgetComponent } from '../components/widget/widget.component';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent { }
+export class DashboardComponent {}

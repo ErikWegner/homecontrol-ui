@@ -1,0 +1,10 @@
+# OpenID Connect Issuer
+RIDSER_OIDC_ISSUER_URL=http://localhost:8101/realms/multcorp
+# Client with user data access
+RIDSER_OIDC_CLIENT_ID=ridser
+# Secret for client with user data access
+RIDSER_OIDC_CLIENT_SECRET=...
+# Single sign on logout endpoint
+RIDSER_LOGOUT_SSO_URI=http://localhost:8101/realms/multcorp/protocol/openid-connect/logout
+# Session secret, length in bytes: 64
+RIDSER_SESSION_SECRET=...
