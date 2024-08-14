@@ -1,9 +1,10 @@
 import { Route } from '@angular/router';
+import { DashboardComponent } from '@homecontrol-ui/dashboard';
 import {
+  authenticatedGuard,
   NotFoundPageComponent,
   WelcomePageComponent,
 } from '@homecontrol-ui/shared-ui';
-import { DashboardComponent } from '@homecontrol-ui/dashboard';
 
 export const appRoutes: Route[] = [
   {
@@ -13,6 +14,10 @@ export const appRoutes: Route[] = [
   {
     path: 'o',
     component: DashboardComponent,
+    canActivate: [
+      // AuthenticatedGuard
+      authenticatedGuard,
+    ],
   },
   {
     path: '**',

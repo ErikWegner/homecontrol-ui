@@ -16,7 +16,7 @@ services:
       - RIDSER_PROXY_TARGET=http://172.17.0.1:3000/
       # Deny refresh requests as long as the session is valid for longer than this threshold
       - RIDSER_SESSION_REFRESH_THRESHOLD=15
-      - RIDSER_LOGIN_REDIRECT_APP_URIS=http://localhost:4200/
+      - RIDSER_LOGIN_REDIRECT_APP_URIS=http://localhost:4200/*,http://localhost:4200/sso.html
       - RIDSER_LOGOUT_REDIRECT_APP_URIS=http://localhost:4200/
 
   redis:
