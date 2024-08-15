@@ -12,7 +12,14 @@
       }"
     />
     <lib-widget type="button" title="down" />
-    <lib-widget type="text" title="open" value="28" />
+    <lib-widget
+      type="text"
+      title="open"
+      value=""
+      [watch]="{
+        topic: '/d/r1/position/left'
+      }"
+    />
     <lib-widget
       type="text"
       title="S88912 garden christmas tree rgb lights"
@@ -24,5 +31,8 @@
     <lib-widget type="button" title="stop" />
     <lib-widget type="button" title="down" />
     <lib-widget type="text" title="open" value="29.90 °C" />
+  </lib-panel>
+  <lib-panel title="color">
+    <lib-widget type="text" title="color" [watch]="{ topic: '/d/r2/color' }" />
   </lib-panel>
 </lib-container>

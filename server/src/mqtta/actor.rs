@@ -5,6 +5,7 @@ use rand::distributions::{Alphanumeric, DistString};
 use rumqttc::{
     mqttbytes::v4::Packet::Publish, AsyncClient, Event::Incoming, MqttOptions, QoS, Transport,
 };
+use serde_json::json;
 use tokio::{
     sync::{mpsc, watch, RwLock},
     task,
@@ -156,8 +157,13 @@ impl SubscriberActor {
                                     if let Some(w) = map.get(&topic) {
                                         let tx = w.0.clone();
                                         let new_message = Arc::new(
-                                            String::from_utf8(p.payload.to_vec())
-                                                .unwrap_or_default(),
+                                            json!({
+                                                "type": "update",
+                                                "topic": topic.clone(),
+                                                "data": String::from_utf8(p.payload.to_vec())
+                                                .unwrap_or_default()
+                                            })
+                                            .to_string(),
                                         );
                                         if tx.send(new_message).is_err() {
                                             error!("Error sending message to watcher: {:?}", topic);

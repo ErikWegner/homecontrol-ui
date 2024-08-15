@@ -21,6 +21,7 @@ headers = "0.4"
 hostname = "0.4.0"
 hyper = { version = "1.0", features = [] }
 hyper-util = { version = "0.1", features = ["tokio", "server-auto", "http1"] }
+jwt-authorizer = "0.14.0"
 rand = "0.8.5"
 rumqttc = { version = "0.24.0", default-features = false, features = [
   "use-native-tls",

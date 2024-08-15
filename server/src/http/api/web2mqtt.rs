@@ -1,7 +1,9 @@
 use axum::{debug_handler, extract::State, Json};
+use jwt_authorizer::{JwtClaims, RegisteredClaims};
 use rumqttc::QoS;
 use serde::Deserialize;
 use tokio::sync::oneshot;
+use tracing::debug;
 
 use crate::mqtta::{
     message::{ActorMessage, PublishMessage},
@@ -18,9 +20,11 @@ pub(crate) struct Web2MqttRequestBody {
 
 #[debug_handler]
 pub(crate) async fn web2mqtt_handler(
+    JwtClaims(user): JwtClaims<RegisteredClaims>,
     State(mqtt): State<MqttHandle>,
     Json(payload): Json<Web2MqttRequestBody>,
 ) -> String {
+    debug!("Publish request for user: {:?}", user);
     let payload = PublishMessage::builder()
         .topic(payload.topic.clone())
         .value(payload.value.clone().into_bytes())

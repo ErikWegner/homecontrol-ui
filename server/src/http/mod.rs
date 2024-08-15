@@ -14,20 +14,32 @@ use axum::{
     Router,
 };
 use color_eyre::{eyre::Context, Result};
+use jwt_authorizer::{Authorizer, IntoLayer, JwtAuthorizer, Validation};
 use tokio::signal;
 use tower_http::{timeout::TimeoutLayer, trace::TraceLayer};
 use tracing::debug;
 
-fn api_routes(state: AppState) -> Result<Router> {
+async fn api_routes(state: AppState) -> Result<Router> {
+    let url = std::env::var("HCS_JWT_ISSUER").wrap_err("Missing HCS_JWT_ISSUER variable")?;
+    let validation = Validation::new()
+        .iss(&[url.clone()])
+        .aud(&["homecontrol"])
+        .leeway(5);
+    let auth: Authorizer = JwtAuthorizer::from_oidc(&url)
+        .validation(validation)
+        .build()
+        .await
+        .wrap_err("JWT authorization initialization failed")?;
     Ok(Router::new()
         .route("/status", get(status_handler))
         .route("/publish", post(web2mqtt_handler))
         .route("/ws", get(ws_handler))
+        .layer(auth.into_layer())
         .with_state(state))
 }
 
 pub(crate) async fn http_server(state: AppState) -> Result<()> {
-    let app = Router::new().nest("/api", api_routes(state)?).layer((
+    let app = Router::new().nest("/api", api_routes(state).await?).layer((
         TraceLayer::new_for_http(),
         TimeoutLayer::new(Duration::from_secs(10)),
     ));

@@ -1,8 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, ElementRef, input, ViewChild } from '@angular/core';
-import { WidgetType } from '../../widget-type';
-import { Web2MqttPayload } from '../../web2mqtt-payload';
+import {
+  Component,
+  effect,
+  ElementRef,
+  input,
+  signal,
+  ViewChild,
+} from '@angular/core';
 import { HcBackendService } from '../../services/hc-backend.service';
+import { Web2MqttPayload } from '../../web2mqtt-payload';
+import { Web2MqttWatch } from '../../web2mqtt-watch';
+import { WidgetType } from '../../widget-type';
 
 @Component({
   selector: 'lib-widget',
@@ -15,8 +23,9 @@ export class WidgetComponent {
   type = input<WidgetType>('text');
   title = input('');
   icon = input('icons/fullcircle.svg');
-  value = input('');
+  value = signal('');
   cmd = input<Web2MqttPayload | null>(null);
+  watch = input<Web2MqttWatch | null>(null);
 
   @ViewChild('textscale') textscale: ElementRef | null = null;
 
@@ -36,6 +45,14 @@ export class WidgetComponent {
           scaleFontContainer.style.fontSize = fontSize + 'px';
         }
       }
+    });
+    effect(() => {
+      const watch = this.watch();
+      console.log('watch:', watch);
+      if (!watch) {
+        return;
+      }
+      this.hc.subscribe(watch)?.subscribe((v) => this.value.set(v));
     });
   }
 
