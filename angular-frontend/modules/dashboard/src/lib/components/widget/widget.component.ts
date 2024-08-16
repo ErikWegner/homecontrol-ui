@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  AfterViewChecked,
   Component,
   effect,
   ElementRef,
@@ -19,18 +20,19 @@ import { WidgetType } from '../../widget-type';
   templateUrl: './widget.component.html',
   styleUrl: './widget.component.css',
 })
-export class WidgetComponent {
+export class WidgetComponent implements AfterViewChecked {
   type = input<WidgetType>('text');
   title = input('');
   icon = input('icons/fullcircle.svg');
   value = signal('');
   cmd = input<Web2MqttPayload | null>(null);
   watch = input<Web2MqttWatch | null>(null);
+  checkFontSize = false;
 
   @ViewChild('textscale') textscale: ElementRef | null = null;
 
-  constructor(private hc: HcBackendService) {
-    effect(() => {
+  ngAfterViewChecked() {
+    if (this.checkFontSize) {
       const desiredWidth = 120;
       const scaleFontContainer = this.textscale?.nativeElement;
       if (scaleFontContainer) {
@@ -45,14 +47,29 @@ export class WidgetComponent {
           scaleFontContainer.style.fontSize = fontSize + 'px';
         }
       }
+    }
+  }
+
+  constructor(private hc: HcBackendService) {
+    let lastValue = '';
+    effect(() => {
+      const currentValue = this.value();
+      if (currentValue !== lastValue) {
+        lastValue = currentValue;
+        this.checkFontSize = true;
+      }
     });
     effect(() => {
       const watch = this.watch();
-      console.log('watch:', watch);
       if (!watch) {
         return;
       }
-      this.hc.subscribe(watch)?.subscribe((v) => this.value.set(v));
+      this.hc.subscribe(watch)?.subscribe((v) => {
+        if (watch.suffix && typeof watch.suffix === 'string') {
+          v = v + watch.suffix;
+        }
+        this.value.set(v);
+      });
     });
   }
 

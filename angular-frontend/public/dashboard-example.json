@@ -1,0 +1,107 @@
+{
+  "v": 1,
+  "containers": [
+    {
+      "title": "Room 1",
+      "panels": [
+        {
+          "title": "Window blinds",
+          "widgets": [
+            {
+              "title": "up",
+              "type": "button",
+              "cmd": {
+                "topic": "/room1/move",
+                "value": "up",
+                "qos": 0,
+                "retain": false
+              }
+            },
+            {
+              "title": "stop",
+              "type": "button",
+              "cmd": {
+                "topic": "/room1/move",
+                "value": "stop",
+                "qos": 0,
+                "retain": false
+              }
+            },
+            {
+              "title": "down",
+              "type": "button",
+              "cmd": {
+                "topic": "/room1/move",
+                "value": "down",
+                "qos": 0,
+                "retain": false
+              }
+            }
+          ]
+        },
+        {
+          "title": "Room 2",
+          "widgets": [
+            {
+              "title": "up",
+              "type": "button",
+              "cmd": {
+                "topic": "/room2/move",
+                "value": "up",
+                "qos": 0,
+                "retain": false
+              }
+            },
+            {
+              "title": "stop",
+              "type": "button",
+              "cmd": {
+                "topic": "/room2/move",
+                "value": "stop",
+                "qos": 0,
+                "retain": false
+              }
+            },
+            {
+              "title": "down",
+              "type": "button",
+              "cmd": {
+                "topic": "/room2/move",
+                "value": "down",
+                "qos": 0,
+                "retain": false
+              }
+            }
+          ]
+        },
+        {
+          "title": "Status",
+          "widgets": [
+            {
+              "title": "Room 1",
+              "type": "text",
+              "watch": {
+                "topic": "/room1/position"
+              }
+            },
+            {
+              "title": "Room 2",
+              "type": "text",
+              "watch": {
+                "topic": "/room2/position"
+              }
+            },
+            {
+              "title": "Temp",
+              "type": "text",
+              "watch": {
+                "topic": "/sensor1",
+                "suffix": " °C"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

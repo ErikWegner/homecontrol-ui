@@ -1,38 +1,22 @@
-<lib-container title="window blinds">
-  <lib-panel title="left">
-    <lib-widget type="button" title="up" />
+@if(loading()) {
+<div>Wird geladen</div>
+<progress class="progress is-large is-info" max="100">60%</progress>
+} @if(errorText()) {
+<div>{{ errorText() }}</div>
+} @if(board()) { @for (container of board().containers; track container) {
+<lib-container [title]="container.title">
+  @for (panel of container.panels; track panel) {
+  <lib-panel [title]="panel.title">
+    @for (widget of panel.widgets; track widget) {
     <lib-widget
-      type="button"
-      title="stop"
-      [cmd]="{
-        topic: '/room1/controller1/cmd',
-        value: 'dashboard says STOP',
-        qos: 1,
-        retain: false
-      }"
+      [type]="widget.type"
+      [title]="widget.title"
+      [cmd]="widget.cmd ?? null"
+      [watch]="widget.watch ?? null"
     />
-    <lib-widget type="button" title="down" />
-    <lib-widget
-      type="text"
-      title="open"
-      value=""
-      [watch]="{
-        topic: '/d/r1/position/left'
-      }"
-    />
-    <lib-widget
-      type="text"
-      title="S88912 garden christmas tree rgb lights"
-      value="1500 lm"
-    />
+    }
   </lib-panel>
-  <lib-panel title="right">
-    <lib-widget type="button" title="up" />
-    <lib-widget type="button" title="stop" />
-    <lib-widget type="button" title="down" />
-    <lib-widget type="text" title="open" value="29.90 °C" />
-  </lib-panel>
-  <lib-panel title="color">
-    <lib-widget type="text" title="color" [watch]="{ topic: '/d/r2/color' }" />
-  </lib-panel>
+  }
 </lib-container>
+
+} }

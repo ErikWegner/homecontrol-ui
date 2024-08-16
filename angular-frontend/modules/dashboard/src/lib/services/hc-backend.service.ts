@@ -2,7 +2,14 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Web2MqttPayload } from '../web2mqtt-payload';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
-import { ReplaySubject } from 'rxjs';
+import { Observable, ReplaySubject } from 'rxjs';
+import { DashboardDefinitionV1 } from '../dashboard-v1-types';
+
+type DashboardJsonV1 = DashboardDefinitionV1 & {
+  v: 1;
+};
+
+type DashboardJson = DashboardJsonV1;
 
 @Injectable({
   providedIn: 'root',
@@ -63,5 +70,9 @@ export class HcBackendService {
       this.topicListeners.set(o.topic, new ReplaySubject<string>(1));
     }
     return this.topicListeners.get(o.topic)?.asObservable();
+  }
+
+  public readBoard(): Observable<DashboardDefinitionV1> {
+    return this.http.get<DashboardJson>('dashboard.json');
   }
 }
