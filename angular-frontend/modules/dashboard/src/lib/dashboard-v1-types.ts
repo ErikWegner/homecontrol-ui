@@ -12,6 +12,7 @@ export interface DashboardV1Watch {
 export interface DashboardWidgetV1 {
   title: string;
   type: 'button' | 'text';
+  icon?: string | null;
   watch?: DashboardV1Watch;
   cmd?: DashboardV1Command;
 }

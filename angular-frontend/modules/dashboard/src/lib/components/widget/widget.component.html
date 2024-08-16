@@ -7,7 +7,7 @@
     {{ title() }}
   </div>
   @if(type() == "button") {
-  <img class="hcicon" [src]="icon()" />
+  <img class="hcicon" [src]="imgsrc()" />
   } @if(type() == "text") {
   <div class="hcvalue" #textscale>
     {{ value() }}

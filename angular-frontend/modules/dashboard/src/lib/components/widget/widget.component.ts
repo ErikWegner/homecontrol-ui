@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   AfterViewChecked,
   Component,
+  computed,
   effect,
   ElementRef,
   input,
@@ -23,7 +24,14 @@ import { WidgetType } from '../../widget-type';
 export class WidgetComponent implements AfterViewChecked {
   type = input<WidgetType>('text');
   title = input('');
-  icon = input('icons/fullcircle.svg');
+  icon = input('');
+  imgsrc = computed(() => {
+    const default_icon = 'icons/fullcircle.svg';
+    if (!this.icon()) {
+      return default_icon;
+    }
+    return 'icons/' + this.icon() + '.svg';
+  });
   value = signal('');
   cmd = input<Web2MqttPayload | null>(null);
   watch = input<Web2MqttWatch | null>(null);
