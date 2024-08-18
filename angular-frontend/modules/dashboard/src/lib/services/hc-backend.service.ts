@@ -21,7 +21,7 @@ export class HcBackendService {
 
   constructor(private http: HttpClient) {
     this.ws = webSocket({
-      url: 'ws://localhost:3020/api/ws',
+      url: 'api/ws',
       deserializer: (e) => {
         try {
           return JSON.parse(e.data);

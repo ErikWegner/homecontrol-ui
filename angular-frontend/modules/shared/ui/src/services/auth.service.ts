@@ -19,7 +19,8 @@ export class AuthService {
   private trySSO = true;
   private lastState = AuthState.Indetermined;
   private expireRetry = 0;
-  private readonly authBasePath = '/auth';
+  private readonly documentBase;
+  private readonly authBasePath = 'auth';
   private readonly window: Window;
   private readonly isAuthenticated$ = new BehaviorSubject<AuthState>(
     AuthState.Indetermined
@@ -32,6 +33,7 @@ export class AuthService {
     private router: Router,
     private csrfTokenService: CsrfTokenService
   ) {
+    this.documentBase = this.document.baseURI;
     this.window = document.defaultView as unknown as Window;
   }
 
@@ -145,13 +147,14 @@ export class AuthService {
       prompt: 'login',
     }
   ) {
-    const oidCallbackUrl = window.location.origin + '/auth/callback';
+    const b = this.documentBase;
+    const oidCallbackUrl = b + 'auth/callback';
     const appCallbackUrl =
-      window.location.origin +
+      b +
       (o.prompt == 'none'
-        ? '/sso.html'
-        : '/' +
-          (o.returnUrl ? '?returnUrl=' + encodeURIComponent(o.returnUrl) : ''));
+        ? 'sso.html'
+        : '' +
+        (o.returnUrl ? '?returnUrl=' + encodeURIComponent(o.returnUrl) : ''));
     const state =
       Math.random().toString(36).substring(2, 15) +
       '-appstate-' +
@@ -172,7 +175,7 @@ export class AuthService {
       .map(([key, value]) => key + '=' + encodeURIComponent(value))
       .join('&');
 
-    return '/auth/login?' + q;
+    return b + 'auth/login?' + q;
   }
 
   public login(returnUrl?: string) {
