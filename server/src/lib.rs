@@ -3,6 +3,7 @@ use http::appstate::AppState;
 use mqtta::run_subscriber_actor;
 use tracing::debug;
 
+mod common;
 mod http;
 mod mqtta;
 

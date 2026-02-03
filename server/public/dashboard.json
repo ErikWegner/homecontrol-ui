@@ -1,0 +1,78 @@
+{
+  "title": "House",
+  "version": 1,
+  "pages": [
+    {
+      "name": "Lights",
+      "groups": [
+        {
+          "title": "Kitchen",
+          "rows": [
+            {
+              "controls": [
+                {
+                  "type": "Button",
+                  "value": {
+                    "label": "Turn On Sink Light",
+                    "action": "on",
+                    "mqtt_instance_identifier": "home_mqtt",
+                    "mqtt_topic": "home/kitchen/sink_light",
+                    "mqtt_json_path": "state"
+                  }
+                },
+                {
+                  "type": "Button",
+                  "value": {
+                    "label": "Turn Off Sink Light",
+                    "action": "off",
+                    "mqtt_instance_identifier": "home_mqtt",
+                    "mqtt_topic": "home/kitchen/sink_light",
+                    "mqtt_json_path": "state"
+                  }
+                }
+              ]
+            },
+            {
+              "controls": [
+                {
+                  "type": "Button",
+                  "value": {
+                    "label": "Turn On Ceiling Light",
+                    "action": "on",
+                    "mqtt_instance_identifier": "home_mqtt",
+                    "mqtt_topic": "home/kitchen/ceiling_light",
+                    "mqtt_json_path": "state"
+                  }
+                },
+                {
+                  "type": "Button",
+                  "value": {
+                    "label": "Turn Off Ceiling Light",
+                    "action": "off",
+                    "mqtt_instance_identifier": "home_mqtt",
+                    "mqtt_topic": "home/kitchen/ceiling_light",
+                    "mqtt_json_path": "state"
+                  }
+                }
+              ]
+            },
+            {
+              "controls": [
+                {
+                  "type": "GaugeDisplay",
+                  "value": {
+                    "value": 22.5,
+                    "unit": "°C",
+                    "mqtt_instance_identifier": "home_mqtt",
+                    "mqtt_topic": "home/kitchen/temperature",
+                    "mqtt_json_path": "temperature"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 # Step 1: Build Stage
-FROM rust:1.80.1-bookworm as builder
+FROM rust:1.93.0-bookworm as builder
 
 # Install the necessary dependencies for OpenSSL
 RUN apt-get update && apt-get install -y pkg-config libssl-dev

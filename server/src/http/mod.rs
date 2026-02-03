@@ -7,7 +7,7 @@ use std::{
     time::Duration,
 };
 
-use api::{status::status_handler, web2mqtt::web2mqtt_handler, ws::ws_handler};
+use api::{status::status_handler, web2mqtt::web2mqtt_handler, ws::ws_handler, dashboard::dashboard_handler};
 use appstate::AppState;
 use axum::{
     routing::{get, post},
@@ -22,7 +22,7 @@ use tracing::debug;
 async fn api_routes(state: AppState) -> Result<Router> {
     let url = std::env::var("HCS_JWT_ISSUER").wrap_err("Missing HCS_JWT_ISSUER variable")?;
     let validation = Validation::new()
-        .iss(&[url.clone()])
+        .iss(std::slice::from_ref(&url))
         .aud(&["homecontrol"])
         .leeway(5);
     let auth: Authorizer = JwtAuthorizer::from_oidc(&url)
@@ -34,6 +34,7 @@ async fn api_routes(state: AppState) -> Result<Router> {
         .route("/status", get(status_handler))
         .route("/publish", post(web2mqtt_handler))
         .route("/ws", get(ws_handler))
+        .route("/dashboard", get(dashboard_handler))
         .layer(auth.into_layer())
         .with_state(state))
 }
